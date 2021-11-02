@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sip_test
+package sip
 
 import (
 	"errors"
 	"reflect"
 	"testing"
-
-	"github.com/jart/gosip/sip"
 )
 
 type uriTest struct {
 	s          string
 	e          error
-	uri        *sip.URI
+	uri        *URI
 	skipFormat bool
 }
 
@@ -48,7 +46,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "sip:example.com",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sip",
 			Host:   "example.com",
 		},
@@ -56,7 +54,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "sip:example.com:5060",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sip",
 			Host:   "example.com",
 			Port:   5060,
@@ -65,7 +63,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "sips:jart@google.com",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sips",
 			User:   "jart",
 			Host:   "google.com",
@@ -74,7 +72,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "sips:jart@google.com:5060",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sips",
 			User:   "jart",
 			Host:   "google.com",
@@ -84,7 +82,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "sips:jart:letmein@google.com",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sips",
 			User:   "jart",
 			Pass:   "letmein",
@@ -94,7 +92,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "sips:jart:LetMeIn@google.com:5060",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sips",
 			User:   "jart",
 			Pass:   "LetMeIn",
@@ -105,7 +103,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "sips:GOOGLE.com",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sips",
 			Host:   "google.com",
 		},
@@ -114,7 +112,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "sip:[dead:beef::666]:5060",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sip",
 			Host:   "dead:beef::666",
 			Port:   5060,
@@ -128,7 +126,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "tel:+12126660420",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "tel",
 			Host:   "+12126660420",
 		},
@@ -136,13 +134,13 @@ var uriTests = []uriTest{
 
 	{
 		s: "sip:bob%20barker:priceisright@[dead:beef::666]:5060;isup-oli=00",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sip",
 			User:   "bob barker",
 			Pass:   "priceisright",
 			Host:   "dead:beef::666",
 			Port:   5060,
-			Param:  &sip.URIParam{Name: "isup-oli", Value: "00"},
+			Param:  &URIParam{Name: "isup-oli", Value: "00"},
 		},
 	},
 
@@ -153,7 +151,7 @@ var uriTests = []uriTest{
 
 	{
 		s: "SIP:example.com",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sip",
 			Host:   "example.com",
 		},
@@ -162,14 +160,14 @@ var uriTests = []uriTest{
 
 	{
 		s: "sips:alice@atlanta.com?priority=urgent&subject=project%20x",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sips",
 			User:   "alice",
 			Host:   "atlanta.com",
-			Header: &sip.URIHeader{
+			Header: &URIHeader{
 				Name:  "subject",
 				Value: "project x",
-				Next: &sip.URIHeader{
+				Next: &URIHeader{
 					Name:  "priority",
 					Value: "urgent",
 				},
@@ -179,28 +177,28 @@ var uriTests = []uriTest{
 
 	{
 		s: "sip:+1-212-555-1212:1234@gateway.com;user=phone",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sip",
 			User:   "+1-212-555-1212",
 			Pass:   "1234",
 			Host:   "gateway.com",
-			Param:  &sip.URIParam{Name: "user", Value: "phone"},
+			Param:  &URIParam{Name: "user", Value: "phone"},
 		},
 	},
 
 	{
 		s: "sip:atlanta.com;method=register?to=alice%40atlanta.com",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sip",
 			Host:   "atlanta.com",
-			Param:  &sip.URIParam{Name: "method", Value: "register"},
-			Header: &sip.URIHeader{Name: "to", Value: "alice@atlanta.com"},
+			Param:  &URIParam{Name: "method", Value: "register"},
+			Header: &URIHeader{Name: "to", Value: "alice@atlanta.com"},
 		},
 	},
 
 	{
 		s: "sip:alice;day=tuesday@atlanta.com",
-		uri: &sip.URI{
+		uri: &URI{
 			Scheme: "sip",
 			User:   "alice;day=tuesday",
 			Host:   "atlanta.com",
@@ -211,7 +209,7 @@ var uriTests = []uriTest{
 
 func TestParseURI(t *testing.T) {
 	for _, test := range uriTests {
-		uri, err := sip.ParseURI([]byte(test.s))
+		uri, err := ParseURI([]byte(test.s))
 		if err != nil {
 			if !reflect.DeepEqual(test.e, err) {
 				t.Errorf("%s\nWant: %#v\nGot:  %#v", test.s, test.e, err)

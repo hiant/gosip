@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,13 +36,27 @@ package sip
 
 import (
 	"bytes"
-
-	"github.com/jart/gosip/util"
+	"strconv"
+	"strings"
 )
 
 const (
 	delims = ":/@;?#<>"
 )
+
+// URIParam is a linked list of ;key=values for URI parameters.
+type URIParam struct {
+	Name  string
+	Value string
+	Next  *URIParam
+}
+
+// URIHeader is a linked list of ?key=values for URI headers.
+type URIHeader struct {
+	Name  string
+	Value string
+	Next  *URIHeader
+}
 
 type URI struct {
 	Scheme string     // e.g. sip, sips, tel, etc.
@@ -57,77 +71,131 @@ type URI struct {
 //go:generate ragel -Z -G2 -o uri_parse.go uri_parse.rl
 
 // Deep copies a URI object.
-func (uri *URI) Copy() *URI {
-	if uri == nil {
+func (u *URI) Copy() *URI {
+	if u == nil {
 		return nil
 	}
 	res := new(URI)
-	*res = *uri
-	res.Param = uri.Param
-	res.Header = uri.Header
+	*res = *u
+	res.Param = u.Param
+	res.Header = u.Header
 	return res
 }
 
 // TODO(jart): URI Comparison https://tools.ietf.org/html/rfc3261#section-19.1.4
 
-func (uri *URI) String() string {
+func (u *URI) String() string {
 	var b bytes.Buffer
-	uri.Append(&b)
+	u.Append(&b)
 	return b.String()
 }
 
-func (uri *URI) Append(b *bytes.Buffer) {
-	if uri == nil {
+func (u *URI) Append(b *bytes.Buffer) {
+	if u == nil {
 		return
 	}
-	if uri.Scheme == "" {
+	if u.Scheme == "" {
 		b.WriteString("sip:")
 	} else {
-		b.WriteString(uri.Scheme)
+		b.WriteString(u.Scheme)
 		b.WriteByte(':')
 	}
-	if uri.User != "" {
-		if uri.Pass != "" {
-			appendEscaped(b, []byte(uri.User), userc)
+	if u.User != "" {
+		if u.Pass != "" {
+			appendEscaped(b, []byte(u.User), userc)
 			b.WriteByte(':')
-			appendEscaped(b, []byte(uri.Pass), passc)
+			appendEscaped(b, []byte(u.Pass), passc)
 		} else {
-			appendEscaped(b, []byte(uri.User), userc)
+			appendEscaped(b, []byte(u.User), userc)
 		}
 		b.WriteByte('@')
 	}
-	if util.IsIPv6(uri.Host) {
+	if strings.Contains(u.Host, ":") {
 		b.WriteByte('[')
-		b.WriteString(uri.Host)
+		b.WriteString(u.Host)
 		b.WriteByte(']')
 	} else {
-		b.WriteString(uri.Host)
+		b.WriteString(u.Host)
 	}
-	if uri.Port > 0 {
+	if u.Port > 0 {
 		b.WriteByte(':')
-		b.WriteString(util.Portstr(uri.Port))
+		b.WriteString(strconv.FormatInt(int64(u.Port), 10))
 	}
-	uri.Param.Append(b)
-	uri.Header.Append(b)
+	u.Param.Append(b)
+	u.Header.Append(b)
 }
 
-func (uri *URI) CompareHostPort(other *URI) bool {
-	if uri != nil && other != nil {
-		if uri.Host == other.Host && uri.GetPort() == other.GetPort() {
+func (u *URI) CompareHostPort(other *URI) bool {
+	if u != nil && other != nil {
+		if u.Host == other.Host && u.GetPort() == other.GetPort() {
 			return true
 		}
 	}
 	return false
 }
 
-func (uri *URI) GetPort() uint16 {
-	if uri.Port == 0 {
-		if uri.Scheme == "sips" {
+func (u *URI) GetPort() uint16 {
+	if u.Port == 0 {
+		if u.Scheme == "sips" {
 			return 5061
 		} else {
 			return 5060
 		}
 	} else {
-		return uri.Port
+		return u.Port
+	}
+}
+
+// Get returns an entry in O(n) time.
+func (p *URIParam) Get(name string) *URIParam {
+	if p == nil {
+		return nil
+	}
+	if strings.EqualFold(p.Name, name) {
+		return p
+	}
+	return p.Next.Get(name)
+}
+
+// Append serializes URI parameters in insertion order.
+func (p *URIParam) Append(b *bytes.Buffer) {
+	if p == nil {
+		return
+	}
+	p.Next.Append(b)
+	b.WriteByte(';')
+	appendEscaped(b, []byte(p.Name), paramc)
+	if p.Value != "" {
+		b.WriteByte('=')
+		appendEscaped(b, []byte(p.Value), paramc)
+	}
+}
+
+// Get returns an entry in O(n) time.
+func (p *URIHeader) Get(name string) *URIHeader {
+	if p == nil {
+		return nil
+	}
+	if strings.EqualFold(p.Name, name) {
+		return p
+	}
+	return p.Next.Get(name)
+}
+
+// Append serializes URI headers in insertion order.
+func (p *URIHeader) Append(b *bytes.Buffer) {
+	if p == nil {
+		return
+	}
+	if p.Next != nil {
+		p.Next.Append(b)
+		b.WriteByte('&')
+	} else {
+		b.WriteByte('?')
+	}
+	appendEscaped(b, []byte(p.Name), paramc)
+	if p.Value != "" {
+		b.WriteByte('=')
+		appendEscaped(b, []byte(p.Value), paramc)
 	}
 }

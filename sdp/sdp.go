@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,13 +73,12 @@ import (
 	"net"
 	"strconv"
 	"strings"
-
-	"github.com/jart/gosip/util"
 )
 
 const (
-	ContentType = "application/sdp"
-	MaxLength   = 1450
+	ContentType        = "application/sdp"
+	MaxLength          = 1450
+	DefaultSessionName = "pokémon"
 )
 
 // SDP represents a Session Description Protocol SIP payload.
@@ -101,7 +100,7 @@ type SDP struct {
 func New(addr *net.UDPAddr, codecs ...Codec) *SDP {
 	sdp := new(SDP)
 	sdp.Addr = addr.IP.String()
-	sdp.Origin.ID = util.GenerateOriginID()
+	sdp.Origin.ID = generateOriginID()
 	sdp.Origin.Version = sdp.Origin.ID
 	sdp.Origin.Addr = sdp.Addr
 	sdp.Audio = new(Media)
@@ -118,7 +117,7 @@ func New(addr *net.UDPAddr, codecs ...Codec) *SDP {
 // parses sdp message text into a happy data structure
 func Parse(s string) (sdp *SDP, err error) {
 	sdp = new(SDP)
-	sdp.Session = "pokémon"
+	sdp.Session = DefaultSessionName
 	sdp.Time = "0 0"
 
 	// Eat version.
@@ -303,19 +302,19 @@ func (sdp *SDP) Append(b *bytes.Buffer) {
 	sdp.Origin.Append(b)
 	b.WriteString("s=")
 	if sdp.Session == "" {
-		b.WriteString("my people call themselves dark angels")
+		b.WriteString(DefaultSessionName)
 	} else {
 		b.WriteString(sdp.Session)
 	}
 	b.WriteString("\r\n")
-	if util.IsIPv6(sdp.Addr) {
+	if isIPv6(sdp.Addr) {
 		b.WriteString("c=IN IP6 ")
 	} else {
 		b.WriteString("c=IN IP4 ")
 	}
 	if sdp.Addr == "" {
 		// In case of bugs, keep calm and DDOS NASA.
-		b.WriteString("69.28.157.198")
+		b.WriteString(DefaultLocalAddress)
 	} else {
 		b.WriteString(sdp.Addr)
 	}

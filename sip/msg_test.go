@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sip_test
+package sip
 
 import (
 	"reflect"
 	"testing"
-
-	"github.com/jart/gosip/sip"
 )
 
 const (
@@ -58,7 +56,7 @@ const (
 type msgTest struct {
 	name string
 	s    string
-	msg  sip.Msg
+	msg  Msg
 	e    error
 }
 
@@ -66,14 +64,14 @@ var msgTests = []msgTest{
 
 	{
 		s: "",
-		e: sip.MsgIncompleteError{Msg: []uint8{}},
+		e: MsgIncompleteError{Msg: []uint8{}},
 	},
 
 	{
 		name: "UTF8 Phrase",
 		s: "SIP/2.0 200 ◕◡◕\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "◕◡◕",
@@ -85,7 +83,7 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"Expires:    666\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
@@ -98,11 +96,11 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"X-LOL: omfg\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			XHeader:      &sip.XHeader{Name: "X-LOL", Value: []byte("omfg")},
+			XHeader:      &XHeader{Name: "X-LOL", Value: []byte("omfg")},
 		},
 	},
 
@@ -111,17 +109,17 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"From:  <sip:lol.com> , <sip:bog.com> \r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
-				Next: &sip.Addr{
-					Uri: &sip.URI{
+				Next: &Addr{
+					Uri: &URI{
 						Scheme: "sip",
 						Host:   "bog.com",
 					},
@@ -140,7 +138,7 @@ var msgTests = []msgTest{
 			" Apples and quinces,\r\n" +
 			" Lemons and oranges\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
@@ -164,7 +162,7 @@ var msgTests = []msgTest{
 			" Lemons and oranges\r\n" +
 			"X-LOL: omfg\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
@@ -174,7 +172,7 @@ var msgTests = []msgTest{
 				" Come buy, come buy:\r\n" +
 				" Apples and quinces,\r\n" +
 				" Lemons and oranges",
-			XHeader: &sip.XHeader{Name: "X-LOL", Value: []byte("omfg")},
+			XHeader: &XHeader{Name: "X-LOL", Value: []byte("omfg")},
 		},
 	},
 
@@ -185,14 +183,14 @@ var msgTests = []msgTest{
 			" Come buy, come buy\r\n" +
 			"X-LOL: omfg\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			XHeader: &sip.XHeader{
+			XHeader: &XHeader{
 				Name:  "X-LOL",
 				Value: []byte("omfg"),
-				Next: &sip.XHeader{
+				Next: &XHeader{
 					Name: "X-Warning",
 					Value: []byte("Come buy our orchard fruits,\r\n" +
 						" Come buy, come buy"),
@@ -208,14 +206,14 @@ var msgTests = []msgTest{
 			" continued newfangled value\r\n" +
 			"UnknownHeaderWithUnusualValue: ;;,,;;,;\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			XHeader: &sip.XHeader{
+			XHeader: &XHeader{
 				Name:  "UnknownHeaderWithUnusualValue",
 				Value: []byte(";;,,;;,;"),
-				Next: &sip.XHeader{
+				Next: &XHeader{
 					Name: "NewFangledHeader",
 					Value: []byte("newfangled value\r\n" +
 						" continued newfangled value"),
@@ -231,17 +229,17 @@ var msgTests = []msgTest{
 			" <sip:lol.com>,\r\n" +
 			" <sip:bog.com>\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
-				Next: &sip.Addr{
-					Uri: &sip.URI{
+				Next: &Addr{
+					Uri: &URI{
 						Scheme: "sip",
 						Host:   "bog.com",
 					},
@@ -259,23 +257,23 @@ var msgTests = []msgTest{
 			"CSeq2: back\r\n" +
 			"Proxy-LOL: take\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			XHeader: &sip.XHeader{
+			XHeader: &XHeader{
 				Name:  "Proxy-LOL",
 				Value: []byte("take"),
-				Next: &sip.XHeader{
+				Next: &XHeader{
 					Name:  "CSeq2",
 					Value: []byte("back"),
-					Next: &sip.XHeader{
+					Next: &XHeader{
 						Name:  "Contazt",
 						Value: []byte("the"),
-						Next: &sip.XHeader{
+						Next: &XHeader{
 							Name:  "P-Asserted-LOL",
 							Value: []byte("dance"),
-							Next: &sip.XHeader{
+							Next: &XHeader{
 								Name:  "viaz",
 								Value: []byte("floor"),
 							},
@@ -291,13 +289,13 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"From: Kitty <sip:lol.com>\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
+			From: &Addr{
 				Display: "Kitty",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
@@ -310,13 +308,13 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"From: \"Hello \\\"Kitty\\\" ◕◡◕\" <sip:lol.com>\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
+			From: &Addr{
 				Display: "Hello \"Kitty\" ◕◡◕",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
@@ -331,15 +329,15 @@ var msgTests = []msgTest{
 			"  my \r\n" +
 			" goth\" <sip:lol.com>\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
+			From: &Addr{
 				Display: "oh\r\n" +
 					"  my \r\n" +
 					" goth",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
@@ -354,15 +352,15 @@ var msgTests = []msgTest{
 			"  my \r\n" +
 			" goth <sip:lol.com>\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
+			From: &Addr{
 				Display: "oh\r\n" +
 					"  my \r\n" +
 					" goth",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
@@ -375,16 +373,16 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"From: <sip:lol.com>;tag=omfg\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
-				Param: &sip.Param{Name: "tag", Value: "omfg"},
+				Param: &Param{Name: "tag", Value: "omfg"},
 			},
 		},
 	},
@@ -395,16 +393,16 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"From: <sip:lol.com>;tag=\"◕◡◕\"\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
-				Param: &sip.Param{Name: "tag", Value: "◕◡◕"},
+				Param: &Param{Name: "tag", Value: "◕◡◕"},
 			},
 		},
 	},
@@ -414,16 +412,16 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"From: <sip:lol.com>;tag\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
-				Param: &sip.Param{Name: "tag", Value: ""},
+				Param: &Param{Name: "tag", Value: ""},
 			},
 		},
 	},
@@ -433,16 +431,16 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"From: sip:lol.com;tag=omfg\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "lol.com",
 				},
-				Param: &sip.Param{Name: "tag", Value: "omfg"},
+				Param: &Param{Name: "tag", Value: "omfg"},
 			},
 		},
 	},
@@ -455,7 +453,7 @@ var msgTests = []msgTest{
 	// 		"        protocol=\"application/pkcs7-signature\";\r\n" +
 	// 		"        micalg=sha1; boundary=boundary42\r\n" +
 	// 		"\r\n",
-	// 	msg: sip.Msg{
+	// 	msg: Msg{
 	// 		VersionMajor: 2,
 	// 		Status:       200,
 	// 		Phrase:       "OK",
@@ -468,11 +466,11 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"Via: SIP/2.0/UDP 8.8.4.4\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
@@ -486,11 +484,11 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"Via: SIP/2.0/UDP 8.8.4.4:666\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
@@ -505,11 +503,11 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"Via: SIP/2.0/UDP 8.8.4.4 \t : \t 666\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
@@ -526,17 +524,17 @@ var msgTests = []msgTest{
 			"     SIP/2.0/UDP 10.11.34.38\r\n" +
 			"Warning: Maids heard the goblins cry\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
 			Warning:      "Maids heard the goblins cry",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "10.11.34.37",
-				Next: &sip.Via{
+				Next: &Via{
 					Protocol:  "SIP",
 					Version:   "2.0",
 					Transport: "UDP",
@@ -552,16 +550,16 @@ var msgTests = []msgTest{
 			"Via: SIP/2.0/UDP 10.11.34.37\r\n" +
 			"Via: SIP/2.0/UDP 10.11.34.38\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "10.11.34.37",
-				Next: &sip.Via{
+				Next: &Via{
 					Protocol:  "SIP",
 					Version:   "2.0",
 					Transport: "UDP",
@@ -578,21 +576,21 @@ var msgTests = []msgTest{
 			"v: SIP/2.0/UDP 10.11.34.38, SIP/2.0/UDP 10.11.34.39\r\n" +
 			"m: <sip:love.com>\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "10.11.34.37",
-				Next: &sip.Via{
+				Next: &Via{
 					Protocol:  "SIP",
 					Version:   "2.0",
 					Transport: "UDP",
 					Host:      "10.11.34.38",
-					Next: &sip.Via{
+					Next: &Via{
 						Protocol:  "SIP",
 						Version:   "2.0",
 						Transport: "UDP",
@@ -600,8 +598,8 @@ var msgTests = []msgTest{
 					},
 				},
 			},
-			Contact: &sip.Addr{
-				Uri: &sip.URI{
+			Contact: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "love.com",
 				},
@@ -614,16 +612,16 @@ var msgTests = []msgTest{
 		s: "SIP/2.0 200 OK\r\n" +
 			"Via: SIP/ 2.0/TCP spindle.example.com ;branch=z9hG4bK9ikj8\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "TCP",
 				Host:      "spindle.example.com",
-				Param:     &sip.Param{Name: "branch", Value: "z9hG4bK9ikj8"},
+				Param:     &Param{Name: "branch", Value: "z9hG4bK9ikj8"},
 			},
 		},
 	},
@@ -634,16 +632,16 @@ var msgTests = []msgTest{
 			"v:  SIP  / 2.0  / TCP     spindle.example.com   ;\r\n" +
 			"  branch  =   z9hG4bK9ikj8\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "TCP",
 				Host:      "spindle.example.com",
-				Param:     &sip.Param{Name: "branch", Value: "z9hG4bK9ikj8"},
+				Param:     &Param{Name: "branch", Value: "z9hG4bK9ikj8"},
 			},
 		},
 	},
@@ -659,28 +657,28 @@ var msgTests = []msgTest{
 			" SIP  /    2.0   / UDP  192.168.255.111   ; branch=\r\n" +
 			" z9hG4bK30239\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "192.0.2.2",
-				Param:     &sip.Param{Name: "branch", Value: "390skdjuw"},
-				Next: &sip.Via{
+				Param:     &Param{Name: "branch", Value: "390skdjuw"},
+				Next: &Via{
 					Protocol:  "SIP",
 					Version:   "2.0",
 					Transport: "TCP",
 					Host:      "spindle.example.com",
-					Param:     &sip.Param{Name: "branch", Value: "z9hG4bK9ikj8"},
-					Next: &sip.Via{
+					Param:     &Param{Name: "branch", Value: "z9hG4bK9ikj8"},
+					Next: &Via{
 						Protocol:  "SIP",
 						Version:   "2.0",
 						Transport: "UDP",
 						Host:      "192.168.255.111",
-						Param:     &sip.Param{Name: "branch", Value: "z9hG4bK30239"},
+						Param:     &Param{Name: "branch", Value: "z9hG4bK30239"},
 					},
 				},
 			},
@@ -701,48 +699,48 @@ var msgTests = []msgTest{
 			"Accept: application/sdp\r\n" +
 			"Content-Length: 0\r\n" +
 			"\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Method:       "OPTIONS",
 			CSeqMethod:   "OPTIONS",
 			MaxForwards:  60,
 			CallID:       "e71a163e-c440-474d-a4ec-5cd85a0309c6",
 			CSeq:         36612,
-			Request: &sip.URI{
+			Request: &URI{
 				Scheme: "sip",
 				Host:   "10.11.34.37",
 				Port:   42367,
 			},
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "10.11.34.37",
 				Port:      42367,
-				Param: &sip.Param{
+				Param: &Param{
 					Name:  "branch",
 					Value: "9dc39c3c3e84",
-					Next:  &sip.Param{Name: "rport"},
+					Next:  &Param{Name: "rport"},
 				},
 			},
-			To: &sip.Addr{
-				Uri: &sip.URI{
+			To: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "10.11.34.37",
 					Port:   5060,
 				},
 			},
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "10.11.34.37",
 					Port:   42367,
-					Param:  &sip.URIParam{Name: "laffo"},
+					Param:  &URIParam{Name: "laffo"},
 				},
-				Param: &sip.Param{Name: "tag", Value: "11917cbc0513"},
+				Param: &Param{Name: "tag", Value: "11917cbc0513"},
 			},
-			Contact: &sip.Addr{
-				Uri: &sip.URI{
+			Contact: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "10.11.34.37",
 					Port:   42367,
@@ -779,7 +777,7 @@ var msgTests = []msgTest{
 			"a=silenceSupp:off - - - -\r\n" +
 			"a=ptime:20\r\n" +
 			"a=sendrecv\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
@@ -789,52 +787,52 @@ var msgTests = []msgTest{
 			Server:       "Asterisk PBX 10.11.1",
 			Allow:        "INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, SUBSCRIBE, NOTIFY, INFO, PUBLISH",
 			Supported:    "replaces, timer",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "127.0.0.1",
 				Port:      52711,
-				Param: &sip.Param{
+				Param: &Param{
 					Name:  "rport",
 					Value: "52711",
-					Next: &sip.Param{
+					Next: &Param{
 						Name:  "received",
 						Value: "127.0.0.1",
-						Next: &sip.Param{
+						Next: &Param{
 							Name:  "branch",
 							Value: "z9hG4bK-03d1d81e94a0",
 						},
 					},
 				},
 			},
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "127.0.0.1",
 					Port:   52711,
-					Param:  &sip.URIParam{Name: "transport", Value: "udp"},
+					Param:  &URIParam{Name: "transport", Value: "udp"},
 				},
-				Param: &sip.Param{Name: "tag", Value: "4568e274dbd8"},
+				Param: &Param{Name: "tag", Value: "4568e274dbd8"},
 			},
-			To: &sip.Addr{
-				Uri: &sip.URI{
+			To: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "echo",
 					Host:   "127.0.0.1",
 					Port:   5060,
 				},
-				Param: &sip.Param{Name: "tag", Value: "as71a0fa72"},
+				Param: &Param{Name: "tag", Value: "as71a0fa72"},
 			},
-			Contact: &sip.Addr{
-				Uri: &sip.URI{
+			Contact: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "echo",
 					Host:   "127.0.0.1",
 					Port:   5060,
 				},
 			},
-			Payload: &sip.MiscPayload{
+			Payload: &MiscPayload{
 				T: "application/sdp-lol",
 				D: []byte("v=0\r\n" +
 					"o=root 736606944 736606944 IN IP4 127.0.0.1\r\n" +
@@ -855,62 +853,62 @@ var msgTests = []msgTest{
 	{
 		name: "Flowroute Fun",
 		s:    flowroute,
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Status:       200,
 			Phrase:       "OK",
 			CallID:       "042736d4-0bd9-4681-ab86-7321443ff58a",
 			CSeq:         31109,
 			CSeqMethod:   "INVITE",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "1.2.3.4",
 				Port:      55345,
-				Param:     &sip.Param{Name: "branch", Value: "z9hG4bK-d1d81e94a099"},
+				Param:     &Param{Name: "branch", Value: "z9hG4bK-d1d81e94a099"},
 			},
-			From: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "+12126660420",
 					Host:   "fl.gg",
 				},
-				Param: &sip.Param{Name: "tag", Value: "68e274dbd83b"},
+				Param: &Param{Name: "tag", Value: "68e274dbd83b"},
 			},
-			To: &sip.Addr{
-				Uri: &sip.URI{
+			To: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "+12125650666",
 					Host:   "fl.gg",
 				},
-				Param: &sip.Param{Name: "tag", Value: "gK0cacc73a"},
+				Param: &Param{Name: "tag", Value: "gK0cacc73a"},
 			},
-			Contact: &sip.Addr{
-				Uri: &sip.URI{
+			Contact: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "+12125650666",
 					Host:   "4.55.22.99",
 					Port:   5060,
 				},
 			},
-			RecordRoute: &sip.Addr{
-				Uri: &sip.URI{
+			RecordRoute: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "216.115.69.133",
 					Port:   5060,
-					Param:  &sip.URIParam{Name: "lr"},
+					Param:  &URIParam{Name: "lr"},
 				},
-				Next: &sip.Addr{
-					Uri: &sip.URI{
+				Next: &Addr{
+					Uri: &URI{
 						Scheme: "sip",
 						Host:   "216.115.69.144",
 						Port:   5060,
-						Param:  &sip.URIParam{Name: "lr"},
+						Param:  &URIParam{Name: "lr"},
 					},
 				},
 			},
-			Payload: &sip.MiscPayload{
+			Payload: &MiscPayload{
 				T: "application/sdp-lol",
 				D: []byte("v=0\r\n" +
 					"o=- 24294 7759 IN IP4 4.55.22.66\r\n" +
@@ -955,51 +953,51 @@ var msgTests = []msgTest{
 			"a=rtpmap:101 telephone-event/8000\r\n" +
 			"a=fmtp:101 0-16\r\n" +
 			"a=ptime:20\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Method:       "INVITE",
 			CSeqMethod:   "INVITE",
 			MaxForwards:  70,
 			CallID:       "87704115-03b8-122e-08b5-001bfcce6bdf",
 			CSeq:         133097268,
-			Request: &sip.URI{
+			Request: &URI{
 				Scheme: "sip",
 				Host:   "10.11.34.37",
 			},
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "10.11.34.37",
 				Port:      59516,
-				Param: &sip.Param{
+				Param: &Param{
 					Name:  "branch",
 					Value: "z9hG4bKS308QB9UUpNyD",
-					Next:  &sip.Param{Name: "rport"},
+					Next:  &Param{Name: "rport"},
 				},
 			},
-			To: &sip.Addr{
-				Uri: &sip.URI{
+			To: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "10.11.34.37",
 				},
 			},
-			From: &sip.Addr{
-				Uri: &sip.URI{
-					Scheme: "sip",
-					Host:   "10.11.34.37",
-					Port:   59516,
-				},
-				Param: &sip.Param{Name: "tag", Value: "S1jX7UtK5Zerg"},
-			},
-			Contact: &sip.Addr{
-				Uri: &sip.URI{
+			From: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "10.11.34.37",
 					Port:   59516,
 				},
-				// Next: &sip.Addr{
-				// 	Uri: &sip.URI{
+				Param: &Param{Name: "tag", Value: "S1jX7UtK5Zerg"},
+			},
+			Contact: &Addr{
+				Uri: &URI{
+					Scheme: "sip",
+					Host:   "10.11.34.37",
+					Port:   59516,
+				},
+				// Next: &Addr{
+				// 	Uri: &URI{
 				// 		Scheme: "sip",
 				// 		Host:   "10.11.34.38",
 				// 		Port:   59516,
@@ -1011,7 +1009,7 @@ var msgTests = []msgTest{
 			AllowEvents:        "talk",
 			ContentDisposition: "session",
 			Supported:          "timer, 100rel",
-			Payload: &sip.MiscPayload{
+			Payload: &MiscPayload{
 				T: "application/sdp-lol",
 				D: []byte("v=0\r\n" +
 					"o=- 2862054018559638081 6057228511765453924 IN IP4 10.11.34.37\r\n" +
@@ -1066,100 +1064,100 @@ var msgTests = []msgTest{
 			"m=audio 49217 RTP/AVP 0 12\r\n" +
 			"m=video 3227 RTP/AVP 31\r\n" +
 			"a=rtpmap:31 LPC\r\n",
-		msg: sip.Msg{
+		msg: Msg{
 			Method:       "INVITE",
 			VersionMajor: 2,
-			Request: &sip.URI{
+			Request: &URI{
 				Scheme: "sip",
 				User:   "vivekg",
 				Host:   "chair-dnrc.example.com",
-				Param:  &sip.URIParam{Name: "unknownparam"},
+				Param:  &URIParam{Name: "unknownparam"},
 			},
-			To: &sip.Addr{
-				Uri: &sip.URI{
+			To: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "vivekg",
 					Host:   "chair-dnrc.example.com",
 				},
-				Param: &sip.Param{Name: "tag", Value: "1918181833n"},
+				Param: &Param{Name: "tag", Value: "1918181833n"},
 			},
-			From: &sip.Addr{
+			From: &Addr{
 				Display: "J Rosenberg \\\"",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "jdrosen",
 					Host:   "example.com",
 				},
-				Param: &sip.Param{Name: "tag", Value: "98asjd8"},
+				Param: &Param{Name: "tag", Value: "98asjd8"},
 			},
 			MaxForwards: 68,
 			CallID:      "wsinv.ndaksdj@192.0.2.1",
 			CSeq:        9,
 			CSeqMethod:  "INVITE",
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "UDP",
 				Host:      "192.0.2.2",
-				Param:     &sip.Param{Name: "branch", Value: "390skdjuw"},
-				Next: &sip.Via{
+				Param:     &Param{Name: "branch", Value: "390skdjuw"},
+				Next: &Via{
 					Protocol:  "SIP",
 					Version:   "2.0",
 					Transport: "TCP",
 					Host:      "spindle.example.com",
-					Param:     &sip.Param{Name: "branch", Value: "z9hG4bK9ikj8"},
-					Next: &sip.Via{
+					Param:     &Param{Name: "branch", Value: "z9hG4bK9ikj8"},
+					Next: &Via{
 						Protocol:  "SIP",
 						Version:   "2.0",
 						Transport: "UDP",
 						Host:      "192.168.255.111",
-						Param:     &sip.Param{Name: "branch", Value: "z9hG4bK30239"},
+						Param:     &Param{Name: "branch", Value: "z9hG4bK30239"},
 					},
 				},
 			},
-			XHeader: &sip.XHeader{
+			XHeader: &XHeader{
 				Name:  "UnknownHeaderWithUnusualValue",
 				Value: []byte(";;,,;;,;"),
-				Next: &sip.XHeader{
+				Next: &XHeader{
 					Name: "NewFangledHeader",
 					Value: []byte("newfangled value\r\n" +
 						" continued newfangled value"),
 				},
 			},
-			Route: &sip.Addr{
-				Uri: &sip.URI{
+			Route: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "services.example.com",
-					Param: &sip.URIParam{
+					Param: &URIParam{
 						Name: "unknown-no-value",
-						Next: &sip.URIParam{
+						Next: &URIParam{
 							Name:  "unknownwith",
 							Value: "value",
-							Next:  &sip.URIParam{Name: "lr"},
+							Next:  &URIParam{Name: "lr"},
 						},
 					},
 				},
 			},
-			Contact: &sip.Addr{
+			Contact: &Addr{
 				Display: "Quoted string \"\"",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "jdrosen",
 					Host:   "example.com",
 				},
-				Param: &sip.Param{
+				Param: &Param{
 					Name:  "q",
 					Value: "0.33",
-					Next: &sip.Param{
+					Next: &Param{
 						Name: "secondparam",
-						Next: &sip.Param{
+						Next: &Param{
 							Name:  "newparam",
 							Value: "newvalue",
 						},
 					},
 				},
 			},
-			Payload: &sip.MiscPayload{
+			Payload: &MiscPayload{
 				T: "application/sdp-JART",
 				D: []byte("v=0\r\n" +
 					"o=mhandley 29739 7272939 IN IP4 192.0.2.3\r\n" +
@@ -1176,51 +1174,51 @@ var msgTests = []msgTest{
 	{
 		name: "RFC4475 Torture Message #2",
 		s:    torture2,
-		msg: sip.Msg{
+		msg: Msg{
 			VersionMajor: 2,
 			Method:       "!interesting-Method0123456789_*+`.%indeed'~",
 			CallID:       "intmeth.word%ZK-!.*_+'@word`~)(><:\\/\"][?}{",
 			CSeq:         139122385,
 			CSeqMethod:   "!interesting-Method0123456789_*+`.%indeed'~",
 			MaxForwards:  255,
-			Request: &sip.URI{
+			Request: &URI{
 				Scheme: "sip",
 				User:   "1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*",
 				Pass:   "&it+has=1,weird!*pas$wo~d_too.(doesn't-it)",
 				Host:   "example.com",
 			},
-			Via: &sip.Via{
+			Via: &Via{
 				Protocol:  "SIP",
 				Version:   "2.0",
 				Transport: "TCP",
 				Host:      "host1.example.com",
-				Param:     &sip.Param{Name: "branch", Value: "z9hG4bK-.!%66*_+`'~"},
+				Param:     &Param{Name: "branch", Value: "z9hG4bK-.!%66*_+`'~"},
 			},
-			To: &sip.Addr{
+			To: &Addr{
 				Display: "BEL:\x07 NUL:\x00 DEL:\x7F",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*",
 					Host:   "example.com",
 				},
 			},
-			From: &sip.Addr{
+			From: &Addr{
 				Display: "token1~` token2'+_ token3*%!.-",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "mundane",
 					Host:   "example.com",
 				},
-				Param: &sip.Param{
+				Param: &Param{
 					Name:  "tag",
 					Value: "_token~1'+`*%!-.",
-					Next: &sip.Param{
+					Next: &Param{
 						Name:  "fromParam''~+*_!.-%",
 						Value: "\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x82\xD0\xB0\xD1\x8E\xD1\x89\xD0\xB8\xD0\xB9",
 					},
 				},
 			},
-			XHeader: &sip.XHeader{
+			XHeader: &XHeader{
 				Name:  "extensionHeader-!.%*+_`'~",
 				Value: []byte("\xEF\xBB\xBF\xE5\xA4\xA7\xE5\x81\x9C\xE9\x9B\xBB"),
 			},
@@ -1230,7 +1228,7 @@ var msgTests = []msgTest{
 
 func TestParseMsg(t *testing.T) {
 	for _, test := range msgTests {
-		msg, err := sip.ParseMsg([]byte(test.s))
+		msg, err := ParseMsg([]byte(test.s))
 		if err != nil {
 			if test.e == nil {
 				t.Errorf("%v", err)
@@ -1275,13 +1273,13 @@ func TestParseMsg(t *testing.T) {
 func BenchmarkParseMsgFlowroute(b *testing.B) { // 26653 ns/op
 	msg := []byte(flowroute)
 	for i := 0; i < b.N; i++ {
-		sip.ParseMsg(msg)
+		ParseMsg(msg)
 	}
 }
 
 func BenchmarkParseMsgTorture2(b *testing.B) { // 31397 ns/op
 	msg := []byte(torture2)
 	for i := 0; i < b.N; i++ {
-		sip.ParseMsg(msg)
+		ParseMsg(msg)
 	}
 }

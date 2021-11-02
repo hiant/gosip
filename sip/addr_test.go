@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sip_test
+package sip
 
 import (
 	"bytes"
 	"reflect"
 	"testing"
-
-	"github.com/jart/gosip/sip"
 )
 
 type addrTest struct {
 	name        string
 	s           string
 	s_canonical string
-	addr        sip.Addr
+	addr        Addr
 	err         error
 }
 
@@ -35,8 +33,8 @@ var addrTests = []addrTest{
 	{
 		name: "Basic address",
 		s:    "<sip:pokemon.net>",
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "pokemon.net",
 			},
@@ -46,12 +44,12 @@ var addrTests = []addrTest{
 	{
 		name: "Address parameter",
 		s:    "<sip:pokemon.net>;tag=deadbeef",
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "pokemon.net",
 			},
-			Param: &sip.Param{Name: "tag", Value: "deadbeef"},
+			Param: &Param{Name: "tag", Value: "deadbeef"},
 		},
 	},
 
@@ -59,12 +57,12 @@ var addrTests = []addrTest{
 		name:        "Address parameter spacing",
 		s:           "<sip:pokemon.net>\t ;\t tag\t = \tdeadbeef",
 		s_canonical: "<sip:pokemon.net>;tag=deadbeef",
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "pokemon.net",
 			},
-			Param: &sip.Param{Name: "tag", Value: "deadbeef"},
+			Param: &Param{Name: "tag", Value: "deadbeef"},
 		},
 	},
 
@@ -72,12 +70,12 @@ var addrTests = []addrTest{
 		name:        "Address parameter quoted",
 		s:           "<sip:pokemon.net>;tag=\"deadbeef\"",
 		s_canonical: "<sip:pokemon.net>;tag=deadbeef",
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "pokemon.net",
 			},
-			Param: &sip.Param{Name: "tag", Value: "deadbeef"},
+			Param: &Param{Name: "tag", Value: "deadbeef"},
 		},
 	},
 
@@ -85,36 +83,36 @@ var addrTests = []addrTest{
 		name:        "Address parameter quoted spacing",
 		s:           "<sip:pokemon.net>\t ;\t tag\t = \t\"deadbeef\"",
 		s_canonical: "<sip:pokemon.net>;tag=deadbeef",
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "pokemon.net",
 			},
-			Param: &sip.Param{Name: "tag", Value: "deadbeef"},
+			Param: &Param{Name: "tag", Value: "deadbeef"},
 		},
 	},
 
 	{
 		name: "Address parameter quoted escaped",
 		s:    "<sip:pokemon.net>;tag=\"\\\"deadbeef\\\"\"",
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "pokemon.net",
 			},
-			Param: &sip.Param{Name: "tag", Value: "\"deadbeef\""},
+			Param: &Param{Name: "tag", Value: "\"deadbeef\""},
 		},
 	},
 
 	{
 		name: "URI parameter",
 		s:    "<sip:brave@toaster.net;isup-oli=29>",
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				User:   "brave",
 				Host:   "toaster.net",
-				Param:  &sip.URIParam{Name: "isup-oli", Value: "29"},
+				Param:  &URIParam{Name: "isup-oli", Value: "29"},
 			},
 		},
 	},
@@ -122,27 +120,27 @@ var addrTests = []addrTest{
 	{
 		name: "Address + URI parameter",
 		s:    "<sip:brave@toaster.net;isup-oli=29>;tag=deadbeef",
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				User:   "brave",
 				Host:   "toaster.net",
-				Param:  &sip.URIParam{Name: "isup-oli", Value: "29"},
+				Param:  &URIParam{Name: "isup-oli", Value: "29"},
 			},
-			Param: &sip.Param{Name: "tag", Value: "deadbeef"},
+			Param: &Param{Name: "tag", Value: "deadbeef"},
 		},
 	},
 
 	{
 		s: `<sip:pokemon.com>, Ditto <sip:ditto@pokemon.com>`,
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "pokemon.com",
 			},
-			Next: &sip.Addr{
+			Next: &Addr{
 				Display: "Ditto",
-				Uri: &sip.URI{
+				Uri: &URI{
 					Scheme: "sip",
 					User:   "ditto",
 					Host:   "pokemon.com",
@@ -153,18 +151,18 @@ var addrTests = []addrTest{
 
 	{
 		s: `<sip:1.2.3.4>, <sip:1.2.3.5>, <sip:[666::dead:beef]>`,
-		addr: sip.Addr{
-			Uri: &sip.URI{
+		addr: Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "1.2.3.4",
 			},
-			Next: &sip.Addr{
-				Uri: &sip.URI{
+			Next: &Addr{
+				Uri: &URI{
 					Scheme: "sip",
 					Host:   "1.2.3.5",
 				},
-				Next: &sip.Addr{
-					Uri: &sip.URI{
+				Next: &Addr{
+					Uri: &URI{
 						Scheme: "sip",
 						Host:   "666::dead:beef",
 					},
@@ -176,25 +174,25 @@ var addrTests = []addrTest{
 	{
 		s: "\"\\\"\\\"Justine \\\\Tunney \" " +
 			"<sip:jart@google.com;isup-oli=29>;tag=deadbeef",
-		addr: sip.Addr{
+		addr: Addr{
 			Display: "\"\"Justine \\Tunney ",
-			Uri: &sip.URI{
+			Uri: &URI{
 				Scheme: "sip",
 				User:   "jart",
 				Host:   "google.com",
-				Param:  &sip.URIParam{Name: "isup-oli", Value: "29"},
+				Param:  &URIParam{Name: "isup-oli", Value: "29"},
 			},
-			Param: &sip.Param{Name: "tag", Value: "deadbeef"},
+			Param: &Param{Name: "tag", Value: "deadbeef"},
 		},
 	},
 }
 
-func ParseAddrBytes(s []byte) (addr *sip.Addr, err error) {
+func ParseAddrBytes(s []byte) (addr *Addr, err error) {
 	var b bytes.Buffer
 	b.WriteString("SIP/2.0 900 ParseAddrBytes()\r\nContact:")
 	b.Write(s)
 	b.WriteString("\r\n\r\n")
-	msg, err := sip.ParseMsg(b.Bytes())
+	msg, err := ParseMsg(b.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -234,14 +232,14 @@ func TestAddrString(t *testing.T) {
 }
 
 func TestReversed(t *testing.T) {
-	a := &sip.Addr{
-		Uri: &sip.URI{
+	a := &Addr{
+		Uri: &URI{
 			Scheme: "sip",
 			Host:   "1.2.3.4",
 			Port:   5060,
 		},
-		Next: &sip.Addr{
-			Uri: &sip.URI{
+		Next: &Addr{
+			Uri: &URI{
 				Scheme: "sip",
 				Host:   "2.3.4.5",
 				Port:   5060,
@@ -260,7 +258,7 @@ func TestReversed(t *testing.T) {
 	}
 }
 
-func addrError(t *testing.T, name string, want, got *sip.Addr) {
+func addrError(t *testing.T, name string, want, got *Addr) {
 	if want != nil && got != nil {
 		t.Errorf("%s:\n%#v\n%#v\n!=\n%#v\n%#v", name, want, want.Uri, got, got.Uri)
 	} else {

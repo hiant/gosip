@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,8 +34,6 @@ package sip
 
 import (
 	"bytes"
-
-	"github.com/jart/gosip/util"
 )
 
 // Represents a SIP Address Linked List
@@ -62,7 +60,7 @@ func (addr *Addr) Or(other *Addr) *Addr {
 
 // Sets newly generated tag ID and returns self.
 func (addr *Addr) Tag() *Addr {
-	addr.Param = &Param{"tag", util.GenerateTag(), addr.Param}
+	addr.Param = &Param{"tag", generateTag(), addr.Param}
 	return addr
 }
 

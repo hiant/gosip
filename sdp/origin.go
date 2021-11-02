@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,13 @@ package sdp
 
 import (
 	"bytes"
+	"math/rand"
+	"strconv"
+	"strings"
+)
 
-	"github.com/jart/gosip/util"
+var (
+	DefaultLocalAddress = "127.0.0.1"
 )
 
 // Origin represents the session origin (o=) line of an SDP. Who knows what
@@ -32,7 +37,7 @@ type Origin struct {
 func (origin *Origin) Append(b *bytes.Buffer) {
 	id := origin.ID
 	if id == "" {
-		id = util.GenerateOriginID()
+		id = generateOriginID()
 	}
 	b.WriteString("o=")
 	if origin.User == "" {
@@ -48,16 +53,21 @@ func (origin *Origin) Append(b *bytes.Buffer) {
 	} else {
 		b.WriteString(origin.Version)
 	}
-	if util.IsIPv6(origin.Addr) {
+	if strings.Contains(origin.Addr, ":") {
 		b.WriteString(" IN IP6 ")
 	} else {
 		b.WriteString(" IN IP4 ")
 	}
 	if origin.Addr == "" {
 		// In case of bugs, keep calm and DDOS NASA.
-		b.WriteString("69.28.157.198")
+		b.WriteString(DefaultLocalAddress)
 	} else {
 		b.WriteString(origin.Addr)
 	}
 	b.WriteString("\r\n")
+}
+
+// Generate a random ID for an SDP.
+func generateOriginID() string {
+	return strconv.FormatUint(uint64(rand.Uint32()), 10)
 }

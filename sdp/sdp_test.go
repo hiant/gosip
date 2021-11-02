@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sdp_test
+package sdp
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/jart/gosip/sdp"
 )
 
 type sdpTest struct {
-	name string   // arbitrary name for test
-	s    string   // raw sdp input to parse
-	s2   string   // non-blank if sdp looks different when we format it
-	sdp  *sdp.SDP // memory structure of 's' after parsing
+	name string // arbitrary name for test
+	s    string // raw sdp input to parse
+	s2   string // non-blank if sdp looks different when we format it
+	sdp  *SDP   // memory structure of 's' after parsing
 	err  error
 }
 
@@ -45,8 +43,8 @@ var sdpTests = []sdpTest{
 			"a=silenceSupp:off - - - -\r\n" +
 			"a=ptime:20\r\n" +
 			"a=sendrecv\r\n"),
-		sdp: &sdp.SDP{
-			Origin: sdp.Origin{
+		sdp: &SDP{
+			Origin: Origin{
 				User:    "root",
 				ID:      "31589",
 				Version: "31589",
@@ -55,10 +53,10 @@ var sdpTests = []sdpTest{
 			Session: "session",
 			Time:    "0 0",
 			Addr:    "10.0.0.38",
-			Audio: &sdp.Media{
+			Audio: &Media{
 				Proto: "RTP/AVP",
 				Port:  30126,
-				Codecs: []sdp.Codec{
+				Codecs: []Codec{
 					{PT: 0, Name: "PCMU", Rate: 8000},
 					{PT: 101, Name: "telephone-event", Rate: 8000, Fmtp: "0-16"},
 				},
@@ -89,8 +87,8 @@ var sdpTests = []sdpTest{
 			"m=video 32900 RTP/AVP 34\r\n" +
 			"a=rtpmap:34 H263/90000\r\n" +
 			"a=sendrecv\r\n",
-		sdp: &sdp.SDP{
-			Origin: sdp.Origin{
+		sdp: &SDP{
+			Origin: Origin{
 				User:    "-",
 				ID:      "3366701332",
 				Version: "3366701332",
@@ -99,17 +97,17 @@ var sdpTests = []sdpTest{
 			Addr:    "1.2.3.4",
 			Session: "pokémon",
 			Time:    "0 0",
-			Audio: &sdp.Media{
+			Audio: &Media{
 				Proto: "RTP/AVP",
 				Port:  32898,
-				Codecs: []sdp.Codec{
+				Codecs: []Codec{
 					{PT: 18, Name: "G729", Rate: 8000, Fmtp: "annexb=yes"},
 				},
 			},
-			Video: &sdp.Media{
+			Video: &Media{
 				Proto: "RTP/AVP",
 				Port:  32900,
-				Codecs: []sdp.Codec{
+				Codecs: []Codec{
 					{PT: 34, Name: "H263", Rate: 90000},
 				},
 			},
@@ -139,8 +137,8 @@ var sdpTests = []sdpTest{
 			"a=rtpmap:101 telephone-event/8000\r\n" +
 			"a=ptime:20\r\n" +
 			"a=sendrecv\r\n",
-		sdp: &sdp.SDP{
-			Origin: sdp.Origin{
+		sdp: &SDP{
+			Origin: Origin{
 				User:    "-",
 				ID:      "3366701332",
 				Version: "3366701332",
@@ -149,10 +147,10 @@ var sdpTests = []sdpTest{
 			Session: "-",
 			Time:    "0 0",
 			Addr:    "1.2.3.4",
-			Audio: &sdp.Media{
+			Audio: &Media{
 				Proto: "RTP/AVP",
 				Port:  32898,
-				Codecs: []sdp.Codec{
+				Codecs: []Codec{
 					{PT: 9, Name: "G722", Rate: 8000},
 					{PT: 18, Name: "G729", Rate: 8000},
 					{PT: 0, Name: "PCMU", Rate: 8000},
@@ -186,8 +184,8 @@ var sdpTests = []sdpTest{
 			"a=rtpmap:101 telephone-event/8000\r\n" +
 			"a=ptime:20\r\n" +
 			"a=sendrecv\r\n",
-		sdp: &sdp.SDP{
-			Origin: sdp.Origin{
+		sdp: &SDP{
+			Origin: Origin{
 				User:    "-",
 				ID:      "3366701332",
 				Version: "3366701332",
@@ -196,10 +194,10 @@ var sdpTests = []sdpTest{
 			Session: "-",
 			Time:    "0 0",
 			Addr:    "dead:beef::666",
-			Audio: &sdp.Media{
+			Audio: &Media{
 				Proto: "RTP/AVP",
 				Port:  32898,
-				Codecs: []sdp.Codec{
+				Codecs: []Codec{
 					{PT: 9, Name: "G722", Rate: 8000},
 					{PT: 18, Name: "G729", Rate: 8000},
 					{PT: 0, Name: "PCMU", Rate: 8000},
@@ -234,8 +232,8 @@ var sdpTests = []sdpTest{
 			"a=X-nat:0\r\n" +
 			"a=ptime:20\r\n" +
 			"a=sendrecv\r\n"),
-		sdp: &sdp.SDP{
-			Origin: sdp.Origin{
+		sdp: &SDP{
+			Origin: Origin{
 				User:    "-",
 				ID:      "3457169218",
 				Version: "3457169218",
@@ -244,10 +242,10 @@ var sdpTests = []sdpTest{
 			Session: "pjmedia",
 			Time:    "0 0",
 			Addr:    "10.11.34.37",
-			Audio: &sdp.Media{
+			Audio: &Media{
 				Proto: "RTP/AVP",
 				Port:  4000,
-				Codecs: []sdp.Codec{
+				Codecs: []Codec{
 					{PT: 103, Name: "speex", Rate: 16000},
 					{PT: 102, Name: "speex", Rate: 8000},
 					{PT: 104, Name: "speex", Rate: 32000},
@@ -277,8 +275,8 @@ var sdpTests = []sdpTest{
 			"m=audio 80 TCP/IP 111\r\n" +
 			"a=rtpmap:111 MP3/44100/2\r\n" +
 			"a=sendonly\r\n"),
-		sdp: &sdp.SDP{
-			Origin: sdp.Origin{
+		sdp: &SDP{
+			Origin: Origin{
 				User:    "-",
 				ID:      "3366701332",
 				Version: "3366701334",
@@ -288,10 +286,10 @@ var sdpTests = []sdpTest{
 			Time:     "0 0",
 			Addr:     "dead:beef::666",
 			SendOnly: true,
-			Audio: &sdp.Media{
+			Audio: &Media{
 				Proto: "TCP/IP",
 				Port:  80,
-				Codecs: []sdp.Codec{
+				Codecs: []Codec{
 					{PT: 111, Name: "MP3", Rate: 44100, Param: "2"},
 				},
 			},
@@ -300,7 +298,7 @@ var sdpTests = []sdpTest{
 	},
 }
 
-func sdpCompareCodec(t *testing.T, name string, correct, codec *sdp.Codec) {
+func sdpCompareCodec(t *testing.T, name string, correct, codec *Codec) {
 	if correct != nil && codec == nil {
 		t.Error(name, "not found")
 	}
@@ -328,7 +326,7 @@ func sdpCompareCodec(t *testing.T, name string, correct, codec *sdp.Codec) {
 	}
 }
 
-func sdpCompareCodecs(t *testing.T, name string, corrects, codecs []sdp.Codec) {
+func sdpCompareCodecs(t *testing.T, name string, corrects, codecs []Codec) {
 	if corrects != nil && codecs == nil {
 		t.Error(name, "codecs not found")
 	}
@@ -353,7 +351,7 @@ func sdpCompareCodecs(t *testing.T, name string, corrects, codecs []sdp.Codec) {
 	}
 }
 
-func sdpCompareMedia(t *testing.T, name string, correct, media *sdp.Media) {
+func sdpCompareMedia(t *testing.T, name string, correct, media *Media) {
 	if correct != nil && media == nil {
 		t.Error(name, "not found")
 	}
@@ -379,7 +377,7 @@ func sdpCompareMedia(t *testing.T, name string, correct, media *sdp.Media) {
 
 func TestParse(t *testing.T) {
 	for _, test := range sdpTests {
-		sdp, err := sdp.Parse(test.s)
+		sdp, err := Parse(test.s)
 		if err != nil {
 			if test.err == nil {
 				t.Errorf("%v", err)
@@ -456,7 +454,7 @@ func TestFormatSDP(t *testing.T) {
 		if s != sdp {
 			t.Error("\n" + test.name + "\n\n" + s + "\nIS NOT\n\n" + sdp)
 			fmt.Printf("%s", sdp)
-			fmt.Printf("pokémon")
+			fmt.Printf(DefaultSessionName)
 		}
 	}
 }
