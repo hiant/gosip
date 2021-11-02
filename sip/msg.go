@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ type Msg struct {
 	// Fields that aren't headers.
 	VersionMajor uint8
 	VersionMinor uint8
-	Method       string  // Indicates type of request (if request)
-	Request      *URI    // dest URI (nil if response)
-	Status       int     // Indicates happiness of response (if response)
-	Phrase       string  // Explains happiness of response (if response)
-	Payload      Payload // Stuff that comes after two line breaks
+	Method       RequestMethod // Indicates type of request (if request)
+	Request      *URI          // dest URI (nil if response)
+	Status       StatusCode    // Indicates happiness of response (if response)
+	Phrase       string        // Explains happiness of response (if response)
+	Payload      Payload       // Stuff that comes after two line breaks
 
 	// Special non-SIP fields.
 	SourceAddr *net.UDPAddr // Set by transport layer as received address.
@@ -135,7 +135,7 @@ func (msg *Msg) Append(b *bytes.Buffer) {
 		if msg.Method == "" {
 			b.WriteString("INVITE ")
 		} else {
-			b.WriteString(msg.Method)
+			b.WriteString(msg.Method.ToString())
 			b.WriteString(" ")
 		}
 		if msg.Request == nil {
@@ -149,11 +149,11 @@ func (msg *Msg) Append(b *bytes.Buffer) {
 		b.WriteString("\r\n")
 	} else {
 		if msg.Phrase == "" {
-			msg.Phrase = Phrase(msg.Status)
+			msg.Phrase = msg.Status.Phrase()
 		}
 		msg.appendVersion(b)
 		b.WriteString(" ")
-		b.WriteString(strconv.Itoa(msg.Status))
+		b.WriteString(msg.Status.ToString())
 		b.WriteString(" ")
 		b.WriteString(msg.Phrase)
 		b.WriteString("\r\n")

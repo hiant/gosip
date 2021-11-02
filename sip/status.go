@@ -1,4 +1,4 @@
-// Copyright 2020 Justine Alexandra Roberts Tunney
+// Copyright 2021 The Gosip Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,104 +18,121 @@
 
 package sip
 
+import (
+	"strconv"
+)
+
+type StatusCode uint16
+
 const (
 	// 1xx: Provisional -- request received, continuing to process the request.
-	StatusTrying               = 100 // Indicates server is not totally pwnd.
-	StatusRinging              = 180 // Remote phone is definitely ringing.
-	StatusCallIsBeingForwarded = 181
-	StatusQueued               = 182
-	StatusSessionProgress      = 183 // Establish early media (PSTN ringback)
+	StatusTrying               = StatusCode(100) // Indicates server is not totally pwnd.
+	StatusRinging              = StatusCode(180) // Remote phone is definitely ringing.
+	StatusCallIsBeingForwarded = StatusCode(181)
+	StatusQueued               = StatusCode(182)
+	StatusSessionProgress      = StatusCode(183) // Establish early media (PSTN ringback)
 
 	// 2xx: Success -- the action was successfully received, understood,
 	//      and accepted;
-	StatusOK             = 200 // Call is answered
-	StatusAccepted       = 202 // [RFC3265]
-	StatusNoNotification = 204 // [RFC5839]
+	StatusOK             = StatusCode(200) // Call is answered
+	StatusAccepted       = StatusCode(202) // [RFC3265]
+	StatusNoNotification = StatusCode(204) // [RFC5839]
 
 	// 3xx: Redirection -- further action needs to be taken in order to
 	//      complete the request;
-	StatusMultipleChoices    = 300
-	StatusMovedPermanently   = 301
-	StatusMovedTemporarily   = 302 // Send your call there instead kthx.
-	StatusUseProxy           = 305 // You fool! Send your call there instead.
-	StatusAlternativeService = 380
+	StatusMultipleChoices    = StatusCode(300)
+	StatusMovedPermanently   = StatusCode(301)
+	StatusMovedTemporarily   = StatusCode(302) // Send your call there instead kthx.
+	StatusUseProxy           = StatusCode(305) // You fool! Send your call there instead.
+	StatusAlternativeService = StatusCode(380)
 
 	// 4xx: Client Error -- the request contains bad syntax or cannot be
 	//      fulfilled at this server;
-	StatusBadRequest                   = 400 // Missing headers, bad format, etc.
-	StatusUnauthorized                 = 401 // Resend request with auth header.
-	StatusPaymentRequired              = 402 // I am greedy.
-	StatusForbidden                    = 403 // gtfo
-	StatusNotFound                     = 404 // wat?
-	StatusMethodNotAllowed             = 405 // I don't support that type of request.
-	StatusNotAcceptable                = 406
-	StatusProxyAuthenticationRequired  = 407
-	StatusRequestTimeout               = 408
-	StatusConflict                     = 409
-	StatusGone                         = 410 // Shaniqua don't live here no more.
-	StatusLengthRequired               = 411
-	StatusConditionalRequestFailed     = 412 // [RFC3903]
-	StatusRequestEntityTooLarge        = 413
-	StatusRequestURITooLong            = 414
-	StatusUnsupportedMediaType         = 415
-	StatusUnsupportedURIScheme         = 416
-	StatusUnknownResourcePriority      = 417
-	StatusBadExtension                 = 420
-	StatusExtensionRequired            = 421
-	StatusSessionIntervalTooSmall      = 422 // [RFC4028]
-	StatusIntervalTooBrief             = 423
-	StatusUseIdentityHeader            = 428 // [RFC4474]
-	StatusProvideReferrerIdentity      = 429 // [RFC3892]
-	StatusFlowFailed                   = 430 // [RFC5626]
-	StatusAnonymityDisallowed          = 433 // [RFC5079]
-	StatusBadIdentityInfo              = 436 // [RFC4474]
-	StatusUnsupportedCertificate       = 437 // [RFC4474]
-	StatusInvalidIdentityHeader        = 438 // [RFC4474]
-	StatusFirstHopLacksOutboundSupport = 439 // [RFC5626]
-	StatusMaxBreadthExceeded           = 440 // [RFC5393]
-	StatusConsentNeeded                = 470 // [RFC5360]
-	StatusTemporarilyUnavailable       = 480 // fast busy or soft fail
-	StatusCallTransactionDoesNotExist  = 481 // Bad news
-	StatusLoopDetected                 = 482 // Froot looping
-	StatusTooManyHops                  = 483 // Froot looping
-	StatusAddressIncomplete            = 484
-	StatusAmbiguous                    = 485
-	StatusBusyHere                     = 486
-	StatusRequestTerminated            = 487
-	StatusNotAcceptableHere            = 488
-	StatusBadEvent                     = 489 // [RFC3265]
-	StatusRequestPending               = 491
-	StatusUndecipherable               = 493
-	StatusSecurityAgreementRequired    = 494 // [RFC3329]
+	StatusBadRequest                   = StatusCode(400) // Missing headers, bad format, etc.
+	StatusUnauthorized                 = StatusCode(401) // Resend request with auth header.
+	StatusPaymentRequired              = StatusCode(402) // I am greedy.
+	StatusForbidden                    = StatusCode(403) // gtfo
+	StatusNotFound                     = StatusCode(404) // wat?
+	StatusMethodNotAllowed             = StatusCode(405) // I don't support that type of request.
+	StatusNotAcceptable                = StatusCode(406)
+	StatusProxyAuthenticationRequired  = StatusCode(407)
+	StatusRequestTimeout               = StatusCode(408)
+	StatusConflict                     = StatusCode(409)
+	StatusGone                         = StatusCode(410) // Shaniqua don't live here no more.
+	StatusLengthRequired               = StatusCode(411)
+	StatusConditionalRequestFailed     = StatusCode(412) // [RFC3903]
+	StatusRequestEntityTooLarge        = StatusCode(413)
+	StatusRequestURITooLong            = StatusCode(414)
+	StatusUnsupportedMediaType         = StatusCode(415)
+	StatusUnsupportedURIScheme         = StatusCode(416)
+	StatusUnknownResourcePriority      = StatusCode(417)
+	StatusBadExtension                 = StatusCode(420)
+	StatusExtensionRequired            = StatusCode(421)
+	StatusSessionIntervalTooSmall      = StatusCode(422) // [RFC4028]
+	StatusIntervalTooBrief             = StatusCode(423)
+	StatusUseIdentityHeader            = StatusCode(428) // [RFC4474]
+	StatusProvideReferrerIdentity      = StatusCode(429) // [RFC3892]
+	StatusFlowFailed                   = StatusCode(430) // [RFC5626]
+	StatusAnonymityDisallowed          = StatusCode(433) // [RFC5079]
+	StatusBadIdentityInfo              = StatusCode(436) // [RFC4474]
+	StatusUnsupportedCertificate       = StatusCode(437) // [RFC4474]
+	StatusInvalidIdentityHeader        = StatusCode(438) // [RFC4474]
+	StatusFirstHopLacksOutboundSupport = StatusCode(439) // [RFC5626]
+	StatusMaxBreadthExceeded           = StatusCode(440) // [RFC5393]
+	StatusConsentNeeded                = StatusCode(470) // [RFC5360]
+	StatusTemporarilyUnavailable       = StatusCode(480) // fast busy or soft fail
+	StatusCallTransactionDoesNotExist  = StatusCode(481) // Bad news
+	StatusLoopDetected                 = StatusCode(482) // Froot looping
+	StatusTooManyHops                  = StatusCode(483) // Froot looping
+	StatusAddressIncomplete            = StatusCode(484)
+	StatusAmbiguous                    = StatusCode(485)
+	StatusBusyHere                     = StatusCode(486)
+	StatusRequestTerminated            = StatusCode(487)
+	StatusNotAcceptableHere            = StatusCode(488)
+	StatusBadEvent                     = StatusCode(489) // [RFC3265]
+	StatusRequestPending               = StatusCode(491)
+	StatusUndecipherable               = StatusCode(493)
+	StatusSecurityAgreementRequired    = StatusCode(494) // [RFC3329]
 
 	// 5xx: Server Error -- the server failed to fulfill an apparently
 	//      valid request;
-	StatusInternalServerError = 500
-	StatusNotImplemented      = 501
-	StatusBadGateway          = 502
-	StatusServiceUnavailable  = 503
-	StatusGatewayTimeout      = 504
-	StatusVersionNotSupported = 505
-	StatusMessageTooLarge     = 513
-	StatusPreconditionFailure = 580 // [RFC3312]
+	StatusInternalServerError = StatusCode(500)
+	StatusNotImplemented      = StatusCode(501)
+	StatusBadGateway          = StatusCode(502)
+	StatusServiceUnavailable  = StatusCode(503)
+	StatusGatewayTimeout      = StatusCode(504)
+	StatusVersionNotSupported = StatusCode(505)
+	StatusMessageTooLarge     = StatusCode(513)
+	StatusPreconditionFailure = StatusCode(580) // [RFC3312]
 
 	// 6xx: Global Failure -- the request cannot be fulfilled at any
 	//      server.
-	StatusBusyEverywhere       = 600
-	StatusDecline              = 603
-	StatusDoesNotExistAnywhere = 604
-	StatusNotAcceptable606     = 606
-	StatusDialogTerminated     = 687
+	StatusBusyEverywhere       = StatusCode(600)
+	StatusDecline              = StatusCode(603)
+	StatusDoesNotExistAnywhere = StatusCode(604)
+	StatusNotAcceptable606     = StatusCode(606)
+	StatusDialogTerminated     = StatusCode(687)
 )
 
-func Phrase(status int) string {
-	if phrase, ok := phrases[status]; ok {
+func (s StatusCode) Phrase() string {
+	if phrase, ok := phrases[s]; ok {
 		return phrase
 	}
 	return "Unknown Status Code"
 }
 
-var phrases = map[int]string{
+func (s StatusCode) ToString() string {
+	return strconv.Itoa(int(s))
+}
+
+func Phrase(status int) string {
+	if phrase, ok := phrases[StatusCode(status)]; ok {
+		return phrase
+	}
+	return "Unknown Status Code"
+}
+
+var phrases = map[StatusCode]string{
 	StatusTrying:                       "Trying",
 	StatusRinging:                      "Ringing",
 	StatusCallIsBeingForwarded:         "Call Is Being Forwarded",

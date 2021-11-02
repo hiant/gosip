@@ -110,7 +110,7 @@ action hexLo {
 }
 
 action Method {
-	msg.Method = string(data[mark:p])
+	msg.Method = RequestMethod(string(data[mark:p]))
 }
 
 action VersionMajor {
@@ -127,7 +127,7 @@ action RequestURI {
 }
 
 action StatusCode {
-	msg.Status = msg.Status * 10 + (int(fc) - 0x30)
+	msg.Status = StatusCode(int(msg.Status) * 10 + (int(fc) - 0x30))
 }
 
 action ReasonPhrase {

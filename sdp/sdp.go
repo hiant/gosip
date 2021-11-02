@@ -307,7 +307,7 @@ func (sdp *SDP) Append(b *bytes.Buffer) {
 		b.WriteString(sdp.Session)
 	}
 	b.WriteString("\r\n")
-	if isIPv6(sdp.Addr) {
+	if strings.Contains(sdp.Addr, ":") {
 		b.WriteString("c=IN IP6 ")
 	} else {
 		b.WriteString("c=IN IP4 ")
